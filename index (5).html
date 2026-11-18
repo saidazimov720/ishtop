@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IshTop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: toolbar-first job board. Hero with search, chip filters, card list; detail and apply form open in an overlay. */
+:root{
+  --bg:#F4F6F8; --surface:#FFFFFF; --ink:#12202F; --muted:#5B6B7B; --line:#DDE3E9;
+  --accent:#0B6E69; --accent-ink:#FFFFFF; --accent-soft:#DDF1EF;
+  --pay:#8A4B08; --pay-soft:#FCEFD9; --danger:#B42318; --ok:#067647;
+  --font-head:"Space Grotesk","Inter",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1620; --surface:#16212D; --ink:#E8EEF4; --muted:#93A4B5; --line:#273544;
+    --accent:#3CC6BC; --accent-ink:#06221F; --accent-soft:#143532;
+    --pay:#F2B766; --pay-soft:#3A2A12; --danger:#FF8A7A; --ok:#5FD39A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1620; --surface:#16212D; --ink:#E8EEF4; --muted:#93A4B5; --line:#273544;
+  --accent:#3CC6BC; --accent-ink:#06221F; --accent-soft:#143532;
+  --pay:#F2B766; --pay-soft:#3A2A12; --danger:#FF8A7A; --ok:#5FD39A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;
+  padding-block:0 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-head);text-wrap:balance;margin:0;line-height:1.2}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px;flex-wrap:wrap}
+.brand{font-family:var(--font-head);font-weight:700;font-size:22px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.brand i{width:12px;height:12px;border-radius:3px;background:var(--accent);display:inline-block}
+.view{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.view button{border:0;background:transparent;padding:7px 14px;border-radius:8px;font-weight:500;color:var(--muted)}
+.view button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+.hero{padding-block:28px 20px;display:grid;gap:18px}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:700;letter-spacing:-.02em;max-width:18ch}
+.hero p{margin:0;color:var(--muted);max-width:56ch}
+.stats{display:flex;gap:22px;flex-wrap:wrap;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.stats b{color:var(--ink);font-family:var(--font-head);font-size:18px;margin-right:4px}
+
+.tools{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:6px}
+.field{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 14px;width:100%;min-width:0}
+.field:focus{border-color:var(--accent)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-block:14px 6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.count{color:var(--muted);font-size:14px;margin-block:14px 10px}
+
+.list{display:grid;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;grid-template-columns:1fr auto;gap:10px 16px}
+.card h2{font-size:18px;font-weight:600}
+.card h2 button{all:unset;cursor:pointer}
+.card h2 button:hover{color:var(--accent)}
+.card h2 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.meta{color:var(--muted);font-size:14px;margin-top:2px}
+.pay{font-family:var(--font-head);font-weight:600;color:var(--pay);background:var(--pay-soft);border-radius:8px;padding:5px 10px;white-space:nowrap;align-self:start;font-variant-numeric:tabular-nums}
+.tags{display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}
+.tag{font-size:12.5px;border-radius:6px;padding:2px 9px;background:var(--accent-soft);color:var(--accent)}
+.tag.plain{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.tag.sent{background:transparent;border:1px solid var(--ok);color:var(--ok)}
+.actions{display:flex;gap:8px;grid-column:1/-1;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.when{margin-left:auto;color:var(--muted);font-size:13px}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--font-head);font-size:18px;margin-bottom:4px}
+.foot{margin-top:28px;color:var(--muted);font-size:13px}
+
+/* overlay */
+.ov{position:fixed;inset:0;background:rgba(8,14,22,.55);z-index:20;display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.panel{background:var(--surface);border-radius:14px;width:100%;max-width:680px;padding:24px;margin-block:auto;display:grid;gap:16px;border:1px solid var(--line)}
+.panel header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.panel h2{font-size:24px}
+.x{border:1px solid var(--line);background:transparent;border-radius:8px;width:34px;height:34px;flex:none}
+.panel h3{font-size:15px;margin-bottom:6px}
+.panel ul{margin:0;padding-left:20px;display:grid;gap:3px}
+.panel p{margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.fact{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.fact span{display:block;font-size:12px;color:var(--muted)}
+.fact b{font-weight:600}
+form{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+label{display:grid;gap:5px;font-weight:500;font-size:14px}
+.err{color:var(--danger);font-size:13px;font-weight:400;min-height:0}
+.field.bad{border-color:var(--danger)}
+.ok{background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:14px;font-weight:500}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;font-size:14px}
+@media (max-width:560px){
+  .tools{grid-template-columns:1fr}
+  .card{grid-template-columns:1fr}
+  .pay{justify-self:start}
+  .when{margin-left:0;width:100%}
+  .panel{padding:18px}
+}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><i></i>IshTop</div>
+    <div class="view" role="group" aria-label="Ko‘rinish">
+      <button id="vAll" type="button" aria-pressed="true">Barcha vakansiyalar</button>
+      <button id="vSaved" type="button" aria-pressed="false">Saqlanganlar (<span id="savedN">0</span>)</button>
+    </div>
+  </div>
+
+  <section class="hero">
+    <h1>O‘zingizga mos ish o‘rnini toping</h1>
+    <p>Ish beruvchilar joylashtirgan vakansiyalarni yo‘nalish bo‘yicha saralang, lavozim nomi orqali qidiring va to‘g‘ridan-to‘g‘ri ariza yuboring.</p>
+    <div class="stats" id="stats"></div>
+    <div class="tools">
+      <input id="q" class="field" type="search" placeholder="Lavozim nomi bo‘yicha qidirish, masalan: dasturchi" autocomplete="off" aria-label="Lavozim nomi bo‘yicha qidirish">
+      <select id="sort" class="field" aria-label="Saralash">
+        <option value="new">Eng yangilari</option>
+        <option value="pay">Maosh bo‘yicha (yuqori)</option>
+        <option value="az">Lavozim (A–Z)</option>
+      </select>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Yo‘nalish bo‘yicha filtr"></div>
+  </section>
+
+  <div class="count" id="count" aria-live="polite"></div>
+  <div class="list" id="list"></div>
+  <p class="foot">Sahifadagi kompaniyalar va vakansiyalar namunaviy (demo) ma’lumotlardir. Ariza va saqlangan vakansiyalar faqat shu brauzerning LocalStorage xotirasida saqlanadi.</p>
+</div>
+
+<div id="host"></div>
+
+<script>
+const JOBS = [
+ {id:1,title:"Frontend dasturchi",company:"Silk Road Digital",cat:"IT",city:"Toshkent",type:"To‘liq kun",min:10,max:16,exp:"2 yil",days:1,
+  about:"Mijozlar uchun veb-ilovalar interfeysini ishlab chiqadigan jamoaga qo‘shiling.",
+  reqs:["HTML, CSS va JavaScript bo‘yicha chuqur bilim","React yoki shunga o‘xshash kutubxona tajribasi","Git bilan ishlash","Ingliz tilida texnik hujjatlarni o‘qiy olish"]},
+ {id:2,title:"Python backend dasturchi",company:"Texnopark Solutions",cat:"IT",city:"Masofaviy",type:"Masofaviy",min:12,max:20,exp:"3 yil",days:2,
+  about:"Ichki xizmatlar uchun API va ma’lumotlar bazasi qatlamini ishlab chiqish.",
+  reqs:["Python va Django yoki FastAPI","PostgreSQL va SQL so‘rovlarini optimallashtirish","REST API loyihalash","Docker asoslari"]},
+ {id:3,title:"Ma’lumotlar tahlilchisi",company:"DataNur",cat:"IT",city:"Toshkent",type:"Gibrid",min:9,max:15,exp:"1 yil",days:3,
+  about:"Savdo va mijozlar ma’lumotlarini tahlil qilib, rahbariyat uchun hisobotlar tayyorlash.",
+  reqs:["SQL va Excel","Python (pandas) bilishi afzal","Dashboard tuzish tajribasi","Statistika asoslari"]},
+ {id:4,title:"UX/UI dizayner",company:"Pixel Studio",cat:"Dizayn",city:"Samarqand",type:"To‘liq kun",min:7,max:12,exp:"1 yil",days:4,
+  about:"Mobil ilova va veb-saytlar uchun interfeys maketlarini yaratish.",
+  reqs:["Figma bo‘yicha amaliy tajriba","Portfolio mavjudligi","Dizayn tizimlari bilan ishlash","Jamoada ishlash ko‘nikmasi"]},
+ {id:5,title:"SMM menejer",company:"Brend Lab",cat:"Marketing",city:"Toshkent",type:"To‘liq kun",min:6,max:10,exp:"1 yil",days:2,
+  about:"Mijoz brendlarining ijtimoiy tarmoqlardagi sahifalarini yuritish va reklama kampaniyalarini boshqarish.",
+  reqs:["Instagram va Telegram uchun kontent reja tuzish","Targeting reklama bilan ishlash","Tahliliy hisobot tayyorlash","Ijodiy yondashuv"]},
+ {id:6,title:"Kontent yozuvchi",company:"Brend Lab",cat:"Marketing",city:"Masofaviy",type:"Yarim kun",min:3,max:6,exp:"Tajribasiz ham mumkin",days:6,
+  about:"Blog, ijtimoiy tarmoq va veb-sayt uchun o‘zbek tilida matnlar yozish.",
+  reqs:["O‘zbek tilida savodli yozish","Matn tahrirlash ko‘nikmasi","Muddatga rioya qilish","Ruscha yoki inglizcha manbalar bilan ishlash"]},
+ {id:7,title:"Buxgalter",company:"Zarafshon Savdo",cat:"Moliya",city:"Jizzax",type:"To‘liq kun",min:5,max:8,exp:"2 yil",days:5,
+  about:"Savdo korxonasida birlamchi hujjatlar, soliq hisoboti va ish haqi hisobini yuritish.",
+  reqs:["1C dasturida ishlash","Soliq qonunchiligini bilish","Oliy yoki o‘rta maxsus iqtisodiy ma’lumot","Diqqatlilik va mas’uliyat"]},
+ {id:8,title:"Ingliz tili o‘qituvchisi",company:"Kelajak Ta’lim Markazi",cat:"Ta’lim",city:"Jizzax",type:"Yarim kun",min:4,max:7,exp:"1 yil",days:3,
+  about:"Kattalar va o‘smirlar guruhlarida ingliz tilidan dars berish.",
+  reqs:["IELTS 6.5 yoki Multilevel B2 sertifikati","Dars rejasi tuza olish","Zamonaviy o‘qitish metodlari","Muloqotga ochiqlik"]},
+ {id:9,title:"Hamshira",company:"Shifo Klinikasi",cat:"Tibbiyot",city:"Samarqand",type:"Smenali",min:4,max:6,exp:"1 yil",days:7,
+  about:"Xususiy klinikaning statsionar bo‘limida bemorlarni parvarish qilish.",
+  reqs:["O‘rta maxsus tibbiy ma’lumot","Amaldagi malaka sertifikati","Tungi smenalarda ishlashga tayyorlik","Sabr-toqat va muloyimlik"]},
+ {id:10,title:"Savdo menejeri",company:"Orient Distribution",cat:"Savdo",city:"Toshkent",type:"To‘liq kun",min:5,max:9,exp:"1 yil",days:1,
+  about:"Do‘konlar va ulgurji xaridorlar bilan ishlash, oylik savdo rejasini bajarish. Maoshga bonus qo‘shiladi.",
+  reqs:["Savdo sohasida tajriba","Muzokara olib borish ko‘nikmasi","B toifali haydovchilik guvohnomasi","Mijozlar bazasini yuritish"]},
+ {id:11,title:"Logist",company:"Navoiy Logistik",cat:"Logistika",city:"Navoiy",type:"To‘liq kun",min:6,max:10,exp:"2 yil",days:4,
+  about:"Yuk tashish yo‘nalishlarini rejalashtirish va haydovchilar bilan kunlik aloqani yuritish.",
+  reqs:["Yo‘nalishlarni optimal rejalashtirish","Yuk hujjatlari bilan ishlash","Stressga chidamlilik","Rus tilini erkin bilish"]},
+ {id:12,title:"HR mutaxassisi",company:"Bahor Group",cat:"HR",city:"Andijon",type:"To‘liq kun",min:5,max:8,exp:"1 yil",days:6,
+  about:"Nomzodlarni tanlash, suhbat o‘tkazish va yangi xodimlarni moslashtirish.",
+  reqs:["Xodimlarni tanlash jarayonini bilish","Suhbat o‘tkazish tajribasi","Kadrlar hujjatlarini yuritish","Yaxshi muloqot ko‘nikmasi"]}
+];
+
+const LS_SAVED="ishtop_saved", LS_APPS="ishtop_apps";
+const mem={};
+function load(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return mem[k]??def}}
+function store(k,v){mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+let saved=new Set(load(LS_SAVED,[]));
+let apps=load(LS_APPS,[]);
+const state={q:"",cat:"Barchasi",sort:"new",view:"all"};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pay=j=>j.min+"–"+j.max+" mln so‘m";
+const when=d=>d<=1?"Bugun/kecha":d+" kun oldin";
+const applied=id=>apps.some(a=>a.jobId===id);
+
+function buildStatic(){
+  const cats=["Barchasi",...new Set(JOBS.map(j=>j.cat))];
+  $("#chips").innerHTML=cats.map(c=>`<button type="button" class="chip" data-cat="${esc(c)}" aria-pressed="${c===state.cat}">${esc(c)}</button>`).join("");
+  $("#stats").innerHTML=`<span><b>${JOBS.length}</b>vakansiya</span><span><b>${new Set(JOBS.map(j=>j.company)).size}</b>kompaniya</span><span><b>${cats.length-1}</b>yo‘nalish</span>`;
+}
+
+function filtered(){
+  const q=state.q.trim().toLowerCase();
+  let r=JOBS.filter(j=>(state.cat==="Barchasi"||j.cat===state.cat)&&(!q||j.title.toLowerCase().includes(q))&&(state.view==="all"||saved.has(j.id)));
+  if(state.sort==="new")r.sort((a,b)=>a.days-b.days);
+  if(state.sort==="pay")r.sort((a,b)=>b.max-a.max||b.min-a.min);
+  if(state.sort==="az")r.sort((a,b)=>a.title.localeCompare(b.title,"uz"));
+  return r;
+}
+
+function render(){
+  const r=filtered();
+  $("#savedN").textContent=saved.size;
+  document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.cat===state.cat));
+  $("#vAll").setAttribute("aria-pressed",state.view==="all");
+  $("#vSaved").setAttribute("aria-pressed",state.view==="saved");
+  $("#count").textContent=r.length+" ta vakansiya topildi";
+  if(!r.length){
+    const msg=state.view==="saved"&&!saved.size?["Hali saqlangan vakansiya yo‘q","Kartadagi “Saqlash” tugmasini bosing, vakansiya shu yerda paydo bo‘ladi."]:["Hech narsa topilmadi","Qidiruv so‘zini o‘zgartiring yoki boshqa yo‘nalishni tanlang."];
+    $("#list").innerHTML=`<div class="empty"><b>${msg[0]}</b>${msg[1]}</div>`;
+    return;
+  }
+  $("#list").innerHTML=r.map(j=>`
+  <article class="card">
+    <div>
+      <h2><button type="button" data-open="${j.id}">${esc(j.title)}</button></h2>
+      <div class="meta">${esc(j.company)} · ${esc(j.city)}</div>
+    </div>
+    <div class="pay">${pay(j)}</div>
+    <div class="tags">
+      <span class="tag">${esc(j.cat)}</span><span class="tag plain">${esc(j.type)}</span><span class="tag plain">Tajriba: ${esc(j.exp)}</span>
+      ${applied(j.id)?'<span class="tag sent">Ariza yuborilgan</span>':''}
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" data-open="${j.id}">Batafsil</button>
+      <button type="button" class="btn" data-save="${j.id}" aria-pressed="${saved.has(j.id)}">${saved.has(j.id)?"Saqlangan":"Saqlash"}</button>
+      <span class="when">${when(j.days)}</span>
+    </div>
+  </article>`).join("");
+}
+
+function toast(t){
+  const el=document.createElement("div");el.className="toast";el.setAttribute("role","status");el.textContent=t;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),2200);
+}
+function toggleSave(id){
+  if(saved.has(id)){saved.delete(id);toast("Saqlanganlardan olib tashlandi")}else{saved.add(id);toast("Vakansiya saqlandi")}
+  store(LS_SAVED,[...saved]);render();
+  const b=document.querySelector("#host [data-save]");
+  if(b){b.setAttribute("aria-pressed",saved.has(id));b.textContent=saved.has(id)?"Saqlangan":"Saqlash"}
+}
+
+let lastFocus=null;
+function openJob(id){
+  const j=JOBS.find(x=>x.id===id);if(!j)return;
+  lastFocus=document.activeElement;
+  $("#host").innerHTML=`
+  <div class="ov" id="ov">
+   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="dt">
+    <header>
+      <div><h2 id="dt">${esc(j.title)}</h2><div class="meta">${esc(j.company)} · ${esc(j.city)}</div></div>
+      <button type="button" class="x" id="close" aria-label="Yopish">✕</button>
+    </header>
+    <div class="facts">
+      <div class="fact"><span>Maosh</span><b>${pay(j)}</b></div>
+      <div class="fact"><span>Ish turi</span><b>${esc(j.type)}</b></div>
+      <div class="fact"><span>Tajriba</span><b>${esc(j.exp)}</b></div>
+      <div class="fact"><span>Yo‘nalish</span><b>${esc(j.cat)}</b></div>
+    </div>
+    <div><h3>Vakansiya haqida</h3><p>${esc(j.about)}</p></div>
+    <div><h3>Talablar</h3><ul>${j.reqs.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>
+    <div class="row">
+      <button type="button" class="btn primary" id="applyBtn">${applied(j.id)?"Ariza yuborilgan":"Ariza yuborish"}</button>
+      <button type="button" class="btn" data-save="${j.id}" aria-pressed="${saved.has(j.id)}">${saved.has(j.id)?"Saqlangan":"Saqlash"}</button>
+    </div>
+    <div id="formSlot"></div>
+   </div>
+  </div>`;
+  document.body.style.overflow="hidden";
+  $("#close").focus();
+  $("#applyBtn").addEventListener("click",()=>showForm(j));
+}
+function closeJob(){
+  $("#host").innerHTML="";document.body.style.overflow="";
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+
+function showForm(j){
+  if(applied(j.id)){$("#formSlot").innerHTML=`<div class="ok">Bu vakansiyaga ariza yuborgansiz. Ish beruvchi siz bilan bog‘lanadi.</div>`;return}
+  $("#formSlot").innerHTML=`
+  <form id="apply" novalidate>
+    <h3>Ariza formasi</h3>
+    <label for="fName">Ism va familiya
+      <input id="fName" class="field" autocomplete="name" placeholder="Masalan: Aziza Karimova"><span class="err" data-for="fName"></span></label>
+    <label for="fPhone">Telefon raqami
+      <input id="fPhone" class="field" type="tel" autocomplete="tel" placeholder="+998 90 123 45 67"><span class="err" data-for="fPhone"></span></label>
+    <label for="fMail">Elektron pochta
+      <input id="fMail" class="field" type="email" autocomplete="email" placeholder="ism@pochta.uz"><span class="err" data-for="fMail"></span></label>
+    <label for="fMsg">Qisqacha o‘zingiz haqingizda
+      <textarea id="fMsg" class="field" rows="4" placeholder="Tajribangiz va nima uchun bu lavozim sizga mosligi"></textarea><span class="err" data-for="fMsg"></span></label>
+    <div class="row"><button type="submit" class="btn primary">Arizani yuborish</button><button type="button" class="btn" id="cancelForm">Bekor qilish</button></div>
+  </form>`;
+  $("#fName").focus();
+  $("#cancelForm").addEventListener("click",()=>{$("#formSlot").innerHTML=""});
+  $("#apply").addEventListener("submit",e=>{
+    e.preventDefault();
+    const v={name:$("#fName").value.trim(),phone:$("#fPhone").value.trim(),mail:$("#fMail").value.trim(),msg:$("#fMsg").value.trim()};
+    const digits=v.phone.replace(/\D/g,"");
+    const errs={};
+    if(v.name.split(/\s+/).filter(Boolean).length<2||v.name.length<5)errs.fName="Ism va familiyangizni to‘liq yozing.";
+    if(!(digits.length===9||(digits.length===12&&digits.startsWith("998"))))errs.fPhone="Telefon raqamini +998 90 123 45 67 ko‘rinishida kiriting.";
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.mail))errs.fMail="To‘g‘ri elektron pochta manzilini kiriting.";
+    if(v.msg.length<20)errs.fMsg="Kamida 20 ta belgi yozing, hozir "+v.msg.length+" ta.";
+    document.querySelectorAll(".err").forEach(s=>{const m=errs[s.dataset.for];s.textContent=m||"";document.getElementById(s.dataset.for).classList.toggle("bad",!!m)});
+    const first=Object.keys(errs)[0];
+    if(first){document.getElementById(first).focus();return}
+    apps.push({jobId:j.id,title:j.title,company:j.company,name:v.name,phone:v.phone,mail:v.mail,msg:v.msg,date:new Date().toISOString()});
+    store(LS_APPS,apps);
+    $("#formSlot").innerHTML=`<div class="ok">Arizangiz qabul qilindi: ${esc(j.title)}, ${esc(j.company)}. Ma’lumotlar shu brauzerda saqlandi.</div>`;
+    $("#applyBtn").textContent="Ariza yuborilgan";
+    render();
+  });
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target;
+  const open=t.closest("[data-open]");if(open){openJob(+open.dataset.open);return}
+  const sv=t.closest("[data-save]");if(sv){toggleSave(+sv.dataset.save);return}
+  const chip=t.closest(".chip");if(chip){state.cat=chip.dataset.cat;render();return}
+  if(t.id==="close"||t.id==="ov"){closeJob();return}
+  if(t.id==="vAll"){state.view="all";render()}
+  if(t.id==="vSaved"){state.view="saved";render()}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#ov"))closeJob()});
+$("#q").addEventListener("input",e=>{state.q=e.target.value;render()});
+$("#sort").addEventListener("change",e=>{state.sort=e.target.value;render()});
+
+buildStatic();render();
+</script>
+
+</body>
+</html>
